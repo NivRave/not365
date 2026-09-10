@@ -1,0 +1,29 @@
+enabled_groups:
+  # Soccer / Football — ESPN covers all major leagues via sport+league slug params
+  - espn.scores      # scoreboard, teams, standings, game summary, news
+  - espn.core        # canonical model: events, odds, win-probability, plays
+  - espn.site        # rosters, schedules, injuries, depth charts
+
+  # Basketball
+  - nba.public.cdn   # today's scoreboard, live box score, play-by-play
+  - nba.stats        # full stats.nba.com /stats/ API dispatcher (138 endpoints)
+
+  # Bundesliga (not in ESPN)
+  - openligadb.football
+
+  # MMA / UFC — covered by ESPN groups via sport=mma/league=ufc slug
+
+providers:
+  espn:
+    rate_limit_rps: 5
+    cache_ttl_seconds: 10          # 10s cache absorbs duplicate calls during live reasoning
+    max_response_bytes: 524288     # 512 KB cap — prevents context flooding
+
+  nba:
+    rate_limit_rps: 3
+    cache_ttl_seconds: 10
+    max_response_bytes: 524288
+
+  openligadb:
+    rate_limit_rps: 2
+    cache_ttl_seconds: 30
