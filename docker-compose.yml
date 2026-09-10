@@ -1,4 +1,7 @@
 services:
+  # ---------------------------------------------------------------------------
+  # Backing Stores (Default profile: starts with `docker compose up -d`)
+  # ---------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
     container_name: not365-postgres
@@ -46,6 +49,86 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Application Services (Run with `docker compose --profile app up -d --build`)
+  # ---------------------------------------------------------------------------
+  api:
+    profiles: ["app", "all"]
+    build:
+      context: ./backend
+      target: api
+    container_name: not365-api
+    restart: unless-stopped
+    environment:
+      API_PORT: "8080"
+      POSTGRES_DSN: "postgres://${POSTGRES_USER:-not365}:${POSTGRES_PASSWORD:-not365}@postgres:5432/${POSTGRES_DB:-not365}?sslmode=disable"
+      MONGO_URI: "mongodb://mongo:27017/?replicaSet=rs0&directConnection=true"
+      MONGO_DB: ${MONGO_DB:-not365}
+      REDIS_ADDR: "redis:6379"
+      AUTH_MODE: ${AUTH_MODE:-stub}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-not365-change-in-production-32chars}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_EMAIL: ${VAPID_EMAIL:-mailto:admin@not365.app}
+    ports:
+      - "${API_PORT:-8088}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  gateway:
+    profiles: ["app", "all"]
+    build:
+      context: ./backend
+      target: gateway
+    container_name: not365-gateway
+    restart: unless-stopped
+    environment:
+      GATEWAY_PORT: "8081"
+      REDIS_ADDR: "redis:6379"
+      MONGO_URI: "mongodb://mongo:27017/?replicaSet=rs0&directConnection=true"
+      MONGO_DB: ${MONGO_DB:-not365}
+    ports:
+      - "${GATEWAY_PORT:-8089}:8081"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    profiles: ["app", "all"]
+    build:
+      context: ./backend
+      target: worker
+    container_name: not365-worker
+    restart: unless-stopped
+    environment:
+      MONGO_URI: "mongodb://mongo:27017/?replicaSet=rs0&directConnection=true"
+      MONGO_DB: ${MONGO_DB:-not365}
+      REDIS_ADDR: "redis:6379"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    profiles: ["app", "all"]
+    build:
+      context: ./frontend
+    container_name: not365-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - api
+      - gateway
 
 volumes:
   postgres_data:

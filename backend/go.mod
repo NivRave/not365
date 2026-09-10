@@ -1,6 +1,6 @@
 module github.com/NivRave/not365/backend
 
-go 1.26.4
+go 1.25.0
 
 require (
 	github.com/SherClockHolmes/webpush-go v1.4.0

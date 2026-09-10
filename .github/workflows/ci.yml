@@ -1,0 +1,74 @@
+name: not365 CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (Go Test & Build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache-dependency-path: backend/go.sum
+
+      - name: Download Go Dependencies
+        run: cd backend && go mod download
+
+      - name: Run Backend Unit Tests
+        run: cd backend && go test -v -race ./...
+
+      - name: Build Backend Binaries
+        run: cd backend && go build -v ./...
+
+  frontend:
+    name: Frontend (Typecheck & Build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.3.4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install Dependencies
+        run: cd frontend && pnpm install
+
+      - name: Build React PWA Assets
+        run: cd frontend && pnpm build
+
+  mcp:
+    name: Data Provider Contract Doctor
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Validate sportsdata-mcp Config
+        run: uvx sportsdata-mcp --config sportsdata-mcp.yaml doctor
