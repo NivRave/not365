@@ -27,7 +27,7 @@ func main() {
 	}
 	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
-		mongoURI = "mongodb://localhost:27017/?replicaSet=rs0&directConnection=true"
+		mongoURI = "mongodb://localhost:27018/?replicaSet=rs0&directConnection=true"
 	}
 	mongoDB := os.Getenv("MONGO_DB")
 	if mongoDB == "" {
