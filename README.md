@@ -15,6 +15,9 @@ Built on **Go**, **React 19**, and a free open-source sports data pipeline power
 ## 🌟 Key Features
 
 - ⏱️ **Live Scores & Real-Time Streams**: HTTP/2 Server-Sent Events (SSE) fan-out delivering low-latency score ticks, game clocks, and timeline actions.
+- ⚽ **Interactive Pitch Formations & Lineups**: Regulation visual pitch visualizer (Full Pitch Clash vs. Single Team Tactical View) with player positions, ratings, captain badges, head coaches, and bench substitutes.
+- 🎨 **Multi-Theme Engine & OLED Black Mode**: Zero-power Pure OLED Black (`#000000`), Slate Dark Stadium, and Light Day modes, with high-contrast borders and instant switching.
+- 🔊 **Synthesized Web Audio Alerts**: Zero-dependency Web Audio API oscillator synthesizing goal chimes and referee whistles with volume slider and audio test controls.
 - 🔄 **Adaptive Ingestion Pipeline**: Ingestion state machine shifts dynamically (`IDLE` 30m, `PRE_MATCH` 5m, `LIVE` 15s) with SHA-256 state diffing to eliminate redundant broadcasts.
 - 🔁 **Zero-Loss Reconnect Sync**: SSE reconnection support via `Last-Event-ID` that queries and replays missed chronological events from MongoDB.
 - 📅 **Dynamic iCalendar Sync (RFC 5545)**: Live personal calendar feed (`.ics`) for followed teams and leagues, importable into Apple Calendar, Google Calendar, and Outlook.

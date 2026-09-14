@@ -42,8 +42,31 @@ export interface MatchEvent {
   clock?: Clock
   events?: Event[]
   stats?: MatchStats
+  lineups?: MatchLineups
   sequence: number
   updated_at: string
+}
+
+export interface LineupPlayer {
+  id: string
+  name: string
+  number: number
+  position: string
+  grid?: string
+  is_captain?: boolean
+  rating?: number
+}
+
+export interface TeamLineup {
+  formation: string
+  starting_xi: LineupPlayer[]
+  substitutes: LineupPlayer[]
+  coach?: string
+}
+
+export interface MatchLineups {
+  home: TeamLineup
+  away: TeamLineup
 }
 
 export interface MatchStats {

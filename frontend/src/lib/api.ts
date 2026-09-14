@@ -8,6 +8,7 @@ import {
   TeamDetailResponse,
   StandingsRow,
   H2HEncounter,
+  MatchLineups,
 } from './types'
 
 const API_BASE = ''
@@ -87,6 +88,12 @@ export async function simulateMatch(): Promise<MatchEvent> {
 export async function fetchMatch(id: string): Promise<MatchEvent> {
   const res = await fetch(`${API_BASE}/v1/matches/${encodeURIComponent(id)}`)
   if (!res.ok) throw new Error('Failed to fetch match')
+  return res.json()
+}
+
+export async function fetchMatchLineups(id: string): Promise<MatchLineups> {
+  const res = await fetch(`${API_BASE}/v1/matches/${encodeURIComponent(id)}/lineups`)
+  if (!res.ok) throw new Error('Failed to fetch match lineups')
   return res.json()
 }
 

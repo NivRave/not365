@@ -101,6 +101,7 @@ func main() {
 		r.Get("/matches", matchHandler.ListMatches)
 		r.Get("/matches/{id}", matchHandler.GetMatch)
 		r.Get("/matches/{id}/sync", matchHandler.SyncMatch)
+		r.Get("/matches/{id}/lineups", matchHandler.GetMatchLineups)
 		r.Get("/teams", matchHandler.ListTeams)
 		r.Get("/teams/{id}", matchHandler.GetTeamDetail)
 		r.Get("/leagues/{id}/standings", matchHandler.GetLeagueStandings)

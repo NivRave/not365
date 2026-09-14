@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { ArrowLeft, BarChart2, Clock, History, Activity } from 'lucide-react'
+import { ArrowLeft, BarChart2, Clock, History, Activity, Users } from 'lucide-react'
 import { useMatchStore } from '../stores/matchStore'
 import { useMatchSSE } from '../hooks/useMatchSSE'
 import { LiveScoreTicker } from '../components/LiveScoreTicker'
 import { FollowButton } from '../components/FollowButton'
 import { EventTimeline } from '../components/EventTimeline'
-import { fetchMatchH2H } from '../lib/api'
-import { H2HEncounter, MatchStats } from '../lib/types'
+import { PitchVisualizer } from '../components/PitchVisualizer'
+import { fetchMatchH2H, fetchMatchLineups } from '../lib/api'
+import { H2HEncounter, MatchStats, MatchLineups } from '../lib/types'
 
 interface MatchDetailPageProps {
   matchId: string
@@ -18,9 +19,11 @@ export const MatchDetailPage: React.FC<MatchDetailPageProps> = ({ matchId, onBac
   const loadMatchDetail = useMatchStore((s) => s.loadMatchDetail)
   const isLoading = useMatchStore((s) => s.isLoading)
 
-  const [activeTab, setActiveTab] = useState<'timeline' | 'stats' | 'h2h'>('timeline')
+  const [activeTab, setActiveTab] = useState<'timeline' | 'lineups' | 'stats' | 'h2h'>('timeline')
   const [h2h, setH2H] = useState<H2HEncounter[]>([])
   const [loadingH2H, setLoadingH2H] = useState(false)
+  const [lineups, setLineups] = useState<MatchLineups | null>(null)
+  const [loadingLineups, setLoadingLineups] = useState(false)
 
   // Real-time SSE live connection
   useMatchSSE(matchId)
@@ -30,14 +33,27 @@ export const MatchDetailPage: React.FC<MatchDetailPageProps> = ({ matchId, onBac
   }, [matchId, loadMatchDetail])
 
   useEffect(() => {
-    if (activeTab === 'h2h') {
+    if (selectedMatch?.lineups) {
+      setLineups(selectedMatch.lineups)
+    }
+  }, [selectedMatch])
+
+  useEffect(() => {
+    if (activeTab === 'h2h' && h2h.length === 0) {
       setLoadingH2H(true)
       fetchMatchH2H(matchId)
         .then((res) => setH2H(res))
         .catch((e) => console.error(e))
         .finally(() => setLoadingH2H(false))
     }
-  }, [activeTab, matchId])
+    if (activeTab === 'lineups' && !lineups) {
+      setLoadingLineups(true)
+      fetchMatchLineups(matchId)
+        .then((res) => setLineups(res))
+        .catch((e) => console.error(e))
+        .finally(() => setLoadingLineups(false))
+    }
+  }, [activeTab, matchId, h2h.length, lineups])
 
   if (isLoading && !selectedMatch) {
     return (
@@ -230,6 +246,17 @@ export const MatchDetailPage: React.FC<MatchDetailPageProps> = ({ matchId, onBac
           <span>Timeline</span>
         </button>
         <button
+          onClick={() => setActiveTab('lineups')}
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+            activeTab === 'lineups'
+              ? 'bg-primary text-slate-900 shadow-sm'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Users className="w-3.5 h-3.5" />
+          <span>Lineups</span>
+        </button>
+        <button
           onClick={() => setActiveTab('stats')}
           className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
             activeTab === 'stats'
@@ -271,6 +298,31 @@ export const MatchDetailPage: React.FC<MatchDetailPageProps> = ({ matchId, onBac
             homeTeamId={match.home_team.id}
             awayTeamId={match.away_team.id}
           />
+        </div>
+      )}
+
+      {/* Tab 2: Lineups & Pitch Visualizer */}
+      {activeTab === 'lineups' && (
+        <div className="space-y-4">
+          {loadingLineups ? (
+            <div className="text-center py-16 bg-surface border border-surfaceLight/60 rounded-2xl">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <p className="text-xs text-slate-400">Loading pitch formations & lineups...</p>
+            </div>
+          ) : (lineups || selectedMatch.lineups) ? (
+            <PitchVisualizer
+              lineups={(lineups || selectedMatch.lineups)!}
+              homeTeamName={match.home_team.name}
+              awayTeamName={match.away_team.name}
+              sport={match.sport}
+            />
+          ) : (
+            <div className="text-center py-16 bg-surface border border-surfaceLight/60 rounded-2xl text-xs text-slate-400">
+              <Users className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+              <p className="font-semibold text-slate-300">Lineup Not Available Yet</p>
+              <p className="text-slate-500 text-[11px] mt-1">Starting squads are confirmed approx. 60 minutes before kickoff.</p>
+            </div>
+          )}
         </div>
       )}
 

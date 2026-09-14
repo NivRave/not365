@@ -38,6 +38,7 @@ type MatchEvent struct {
 	Clock      *Clock      `json:"clock,omitempty" bson:"clock,omitempty"`
 	Events     []Event     `json:"events,omitempty" bson:"events,omitempty"`
 	Stats      *MatchStats `json:"stats,omitempty" bson:"stats,omitempty"`
+	Lineups    *MatchLineups `json:"lineups,omitempty" bson:"lineups,omitempty"`
 	Sequence   int64       `json:"sequence" bson:"sequence"`
 	UpdatedAt  time.Time   `json:"updated_at" bson:"updated_at"`
 }
@@ -131,4 +132,27 @@ type H2HEncounter struct {
 	AwayScore  int       `json:"away_score"`
 	Winner     string    `json:"winner"` // "home", "away", "draw"
 }
+
+type LineupPlayer struct {
+	ID        string  `json:"id" bson:"id"`
+	Name      string  `json:"name" bson:"name"`
+	Number    int     `json:"number" bson:"number"`
+	Position  string  `json:"position" bson:"position"` // "GK", "DF", "MF", "FW"
+	Grid      string  `json:"grid,omitempty" bson:"grid,omitempty"` // "row:col", e.g. "1:1"
+	IsCaptain bool    `json:"is_captain" bson:"is_captain"`
+	Rating    float64 `json:"rating,omitempty" bson:"rating,omitempty"`
+}
+
+type TeamLineup struct {
+	Formation   string         `json:"formation" bson:"formation"` // e.g. "4-3-3", "4-2-3-1"
+	StartingXI  []LineupPlayer `json:"starting_xi" bson:"starting_xi"`
+	Substitutes []LineupPlayer `json:"substitutes" bson:"substitutes"`
+	Coach       string         `json:"coach,omitempty" bson:"coach,omitempty"`
+}
+
+type MatchLineups struct {
+	Home TeamLineup `json:"home" bson:"home"`
+	Away TeamLineup `json:"away" bson:"away"`
+}
+
 

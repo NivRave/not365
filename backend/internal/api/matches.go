@@ -160,6 +160,9 @@ func (h *MatchHandler) GetMatch(w http.ResponseWriter, r *http.Request) {
 	// Try Redis state first for live data
 	match, err := h.redisStore.GetMatchState(r.Context(), id)
 	if err == nil && match != nil {
+		if match.Lineups == nil {
+			match.Lineups = generateDefaultLineups(match)
+		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(match)
 		return
@@ -170,6 +173,10 @@ func (h *MatchHandler) GetMatch(w http.ResponseWriter, r *http.Request) {
 	if err != nil || match == nil {
 		http.Error(w, "match not found", http.StatusNotFound)
 		return
+	}
+
+	if match.Lineups == nil {
+		match.Lineups = generateDefaultLineups(match)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -552,6 +559,144 @@ func (h *MatchHandler) runMatchSimulation(m *domain.MatchEvent) {
 			Snapshot: m,
 			Delta:    delta,
 		})
+	}
+}
+
+func (h *MatchHandler) GetMatchLineups(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		http.Error(w, "missing match id", http.StatusBadRequest)
+		return
+	}
+
+	match, err := h.redisStore.GetMatchState(r.Context(), id)
+	if err != nil || match == nil {
+		match, err = h.mongoStore.GetMatchTimeline(r.Context(), id)
+	}
+	if err != nil || match == nil {
+		http.Error(w, "match not found", http.StatusNotFound)
+		return
+	}
+
+	lineups := match.Lineups
+	if lineups == nil {
+		lineups = generateDefaultLineups(match)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(lineups)
+}
+
+func generateDefaultLineups(m *domain.MatchEvent) *domain.MatchLineups {
+	if m.Sport == domain.SportBasketball {
+		return &domain.MatchLineups{
+			Home: domain.TeamLineup{
+				Formation: "Starting Five",
+				StartingXI: []domain.LineupPlayer{
+					{ID: "h-1", Name: "D. Russell", Number: 1, Position: "PG", Grid: "1:1", Rating: 7.2},
+					{ID: "h-2", Name: "A. Reaves", Number: 15, Position: "SG", Grid: "1:2", Rating: 7.4},
+					{ID: "h-3", Name: "R. Hachimura", Number: 28, Position: "SF", Grid: "2:1", Rating: 7.1},
+					{ID: "h-4", Name: "L. James", Number: 23, Position: "PF", Grid: "2:2", IsCaptain: true, Rating: 8.8},
+					{ID: "h-5", Name: "A. Davis", Number: 3, Position: "C", Grid: "3:1", Rating: 8.5},
+				},
+				Substitutes: []domain.LineupPlayer{
+					{ID: "h-sub-1", Name: "G. Vincent", Number: 7, Position: "G"},
+					{ID: "h-sub-2", Name: "M. Christie", Number: 10, Position: "G"},
+					{ID: "h-sub-3", Name: "J. Hayes", Number: 11, Position: "C"},
+				},
+				Coach: "JJ Redick",
+			},
+			Away: domain.TeamLineup{
+				Formation: "Starting Five",
+				StartingXI: []domain.LineupPlayer{
+					{ID: "a-1", Name: "J. Holiday", Number: 4, Position: "PG", Grid: "1:1", Rating: 7.5},
+					{ID: "a-2", Name: "D. White", Number: 9, Position: "SG", Grid: "1:2", Rating: 7.7},
+					{ID: "a-3", Name: "J. Brown", Number: 7, Position: "SF", Grid: "2:1", Rating: 8.3},
+					{ID: "a-4", Name: "J. Tatum", Number: 0, Position: "PF", Grid: "2:2", IsCaptain: true, Rating: 8.9},
+					{ID: "a-5", Name: "K. Porzingis", Number: 8, Position: "C", Grid: "3:1", Rating: 8.1},
+				},
+				Substitutes: []domain.LineupPlayer{
+					{ID: "a-sub-1", Name: "P. Pritchard", Number: 11, Position: "G"},
+					{ID: "a-sub-2", Name: "S. Hauser", Number: 30, Position: "F"},
+					{ID: "a-sub-3", Name: "A. Horford", Number: 42, Position: "C"},
+				},
+				Coach: "Joe Mazzulla",
+			},
+		}
+	}
+
+	// Football Lineups
+	homeCoach := "Head Coach"
+	awayCoach := "Head Coach"
+
+	homeXI := []domain.LineupPlayer{
+		{ID: "h-1", Name: "D. Raya", Number: 22, Position: "GK", Grid: "1:1", Rating: 7.2},
+		{ID: "h-2", Name: "B. White", Number: 4, Position: "DF", Grid: "2:1", Rating: 7.1},
+		{ID: "h-3", Name: "W. Saliba", Number: 2, Position: "DF", Grid: "2:2", Rating: 7.8},
+		{ID: "h-4", Name: "Gabriel M.", Number: 6, Position: "DF", Grid: "2:3", Rating: 7.6},
+		{ID: "h-5", Name: "J. Timber", Number: 12, Position: "DF", Grid: "2:4", Rating: 7.3},
+		{ID: "h-6", Name: "T. Partey", Number: 5, Position: "MF", Grid: "3:1", Rating: 7.4},
+		{ID: "h-7", Name: "D. Rice", Number: 41, Position: "MF", Grid: "3:2", Rating: 7.9},
+		{ID: "h-8", Name: "M. Odegaard", Number: 8, Position: "MF", Grid: "3:3", IsCaptain: true, Rating: 8.2},
+		{ID: "h-9", Name: "B. Saka", Number: 7, Position: "FW", Grid: "4:1", Rating: 8.5},
+		{ID: "h-10", Name: "K. Havertz", Number: 29, Position: "FW", Grid: "4:2", Rating: 7.8},
+		{ID: "h-11", Name: "G. Martinelli", Number: 11, Position: "FW", Grid: "4:3", Rating: 7.5},
+	}
+
+	awayXI := []domain.LineupPlayer{
+		{ID: "a-1", Name: "R. Sanchez", Number: 1, Position: "GK", Grid: "1:1", Rating: 6.9},
+		{ID: "a-2", Name: "M. Gusto", Number: 27, Position: "DF", Grid: "2:1", Rating: 7.0},
+		{ID: "a-3", Name: "W. Fofana", Number: 29, Position: "DF", Grid: "2:2", Rating: 7.1},
+		{ID: "a-4", Name: "L. Colwill", Number: 6, Position: "DF", Grid: "2:3", Rating: 7.2},
+		{ID: "a-5", Name: "M. Cucurella", Number: 3, Position: "DF", Grid: "2:4", Rating: 7.3},
+		{ID: "a-6", Name: "M. Caicedo", Number: 25, Position: "MF", Grid: "3:1", Rating: 7.5},
+		{ID: "a-7", Name: "E. Fernandez", Number: 8, Position: "MF", Grid: "3:2", IsCaptain: true, Rating: 7.4},
+		{ID: "a-8", Name: "N. Madueke", Number: 11, Position: "FW", Grid: "4:1", Rating: 7.1},
+		{ID: "a-9", Name: "C. Palmer", Number: 20, Position: "FW", Grid: "4:2", Rating: 8.3},
+		{ID: "a-10", Name: "J. Sancho", Number: 19, Position: "FW", Grid: "4:3", Rating: 7.2},
+		{ID: "a-11", Name: "N. Jackson", Number: 15, Position: "FW", Grid: "5:1", Rating: 7.4},
+	}
+
+	if strings.Contains(strings.ToLower(m.HomeTeam.Name), "arsenal") {
+		homeCoach = "Mikel Arteta"
+	}
+	if strings.Contains(strings.ToLower(m.AwayTeam.Name), "chelsea") {
+		awayCoach = "Enzo Maresca"
+	}
+
+	homeSubs := []domain.LineupPlayer{
+		{ID: "hs-1", Name: "A. Ramsdale", Number: 1, Position: "GK"},
+		{ID: "hs-2", Name: "O. Zinchenko", Number: 35, Position: "DF"},
+		{ID: "hs-3", Name: "J. Kiwior", Number: 15, Position: "DF"},
+		{ID: "hs-4", Name: "Jorginho", Number: 20, Position: "MF"},
+		{ID: "hs-5", Name: "M. Merino", Number: 23, Position: "MF"},
+		{ID: "hs-6", Name: "R. Sterling", Number: 30, Position: "FW"},
+		{ID: "hs-7", Name: "G. Jesus", Number: 9, Position: "FW"},
+	}
+
+	awaySubs := []domain.LineupPlayer{
+		{ID: "as-1", Name: "F. Jorgensen", Number: 12, Position: "GK"},
+		{ID: "as-2", Name: "B. Badiashile", Number: 5, Position: "DF"},
+		{ID: "as-3", Name: "R. Veiga", Number: 40, Position: "DF"},
+		{ID: "as-4", Name: "R. Lavia", Number: 45, Position: "MF"},
+		{ID: "as-5", Name: "K. Dewsbury-Hall", Number: 22, Position: "MF"},
+		{ID: "as-6", Name: "M. Mudryk", Number: 10, Position: "FW"},
+		{ID: "as-7", Name: "C. Nkunku", Number: 18, Position: "FW"},
+	}
+
+	return &domain.MatchLineups{
+		Home: domain.TeamLineup{
+			Formation:   "4-3-3",
+			StartingXI:  homeXI,
+			Substitutes: homeSubs,
+			Coach:       homeCoach,
+		},
+		Away: domain.TeamLineup{
+			Formation:   "4-2-3-1",
+			StartingXI:  awayXI,
+			Substitutes: awaySubs,
+			Coach:       awayCoach,
+		},
 	}
 }
 
