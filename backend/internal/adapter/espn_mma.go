@@ -63,7 +63,7 @@ func (a *ESPNMMAAdapter) ParseScoreboard(raw json.RawMessage) ([]domain.MatchEve
 				LogoURL: fighter2.Team.Logo,
 			},
 			Status:    status,
-			StartTime: ev.Date,
+			StartTime: ev.Date.Time(),
 			Clock: &domain.Clock{
 				DisplayTime: ev.Status.DisplayClock,
 				Period:      ev.Status.Period,

@@ -65,8 +65,12 @@ export default function App() {
               {currentTab === 'matches' && (
                 <HomePage onSelectMatch={handleSelectMatch} />
               )}
-              {currentTab === 'leagues' && <LeaguesPage />}
-              {currentTab === 'favorites' && <FavoritesPage />}
+              {currentTab === 'leagues' && (
+                <LeaguesPage onSelectMatch={handleSelectMatch} />
+              )}
+              {currentTab === 'favorites' && (
+                <FavoritesPage onSelectMatch={handleSelectMatch} />
+              )}
               {currentTab === 'settings' && <SettingsPage />}
               {currentTab === 'profile' && <ProfilePage />}
             </>

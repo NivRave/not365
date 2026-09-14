@@ -24,6 +24,34 @@ func (a *ESPNSoccerAdapter) Supports(providerID, leagueID string) bool {
 	return strings.ToLower(providerID) == "espn"
 }
 
+type ESPNTime time.Time
+
+func (t *ESPNTime) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), "\"")
+	if s == "null" || s == "" {
+		return nil
+	}
+	formats := []string{
+		time.RFC3339,
+		"2006-01-02T15:04Z",
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05.000Z",
+		"2006-01-02T15:04-0700",
+		"2006-01-02T15:04:05-0700",
+	}
+	for _, f := range formats {
+		if parsed, err := time.Parse(f, s); err == nil {
+			*t = ESPNTime(parsed)
+			return nil
+		}
+	}
+	return fmt.Errorf("cannot parse ESPN time %q", s)
+}
+
+func (t ESPNTime) Time() time.Time {
+	return time.Time(t)
+}
+
 type espnScoreboardResponse struct {
 	Leagues []struct {
 		ID   string `json:"id"`
@@ -34,9 +62,9 @@ type espnScoreboardResponse struct {
 }
 
 type espnEvent struct {
-	ID     string    `json:"id"`
-	Date   time.Time `json:"date"`
-	Name   string    `json:"name"`
+	ID     string   `json:"id"`
+	Date   ESPNTime `json:"date"`
+	Name   string   `json:"name"`
 	Status struct {
 		Clock        float64 `json:"clock"`
 		DisplayClock string  `json:"displayClock"`
@@ -207,7 +235,7 @@ func (a *ESPNSoccerAdapter) convertEvent(ev *espnEvent, defaultLeagueID, default
 			Minute:     minute,
 			Player:     player,
 			TeamID:     d.Team.ID,
-			OccurredAt: ev.Date.Add(time.Duration(minute) * time.Minute),
+			OccurredAt: ev.Date.Time().Add(time.Duration(minute) * time.Minute),
 		})
 	}
 
@@ -221,7 +249,7 @@ func (a *ESPNSoccerAdapter) convertEvent(ev *espnEvent, defaultLeagueID, default
 		HomeTeam:   homeTeam,
 		AwayTeam:   awayTeam,
 		Status:     status,
-		StartTime:  ev.Date,
+		StartTime:  ev.Date.Time(),
 		Score:      score,
 		Clock:      clock,
 		Events:     events,

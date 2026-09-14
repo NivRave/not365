@@ -1,4 +1,14 @@
-import { MatchEvent, User, Follow, Sport } from './types'
+import {
+  MatchEvent,
+  User,
+  Follow,
+  Sport,
+  MatchFilterParams,
+  Team,
+  TeamDetailResponse,
+  StandingsRow,
+  H2HEncounter,
+} from './types'
 
 const API_BASE = ''
 
@@ -19,9 +29,58 @@ export async function fetchLeagues(sport: Sport): Promise<{ id: string; name: st
   return res.json()
 }
 
-export async function fetchMatches(sport: Sport): Promise<MatchEvent[]> {
-  const res = await fetch(`${API_BASE}/v1/matches?sport=${sport}`)
+export async function fetchMatches(params?: Sport | MatchFilterParams): Promise<MatchEvent[]> {
+  const query = new URLSearchParams()
+  if (typeof params === 'string') {
+    query.set('sport', params)
+  } else if (params) {
+    if (params.sport) query.set('sport', params.sport)
+    if (params.status) query.set('status', params.status)
+    if (params.date) query.set('date', params.date)
+    if (params.league_id) query.set('league_id', params.league_id)
+    if (params.team_id) query.set('team_id', params.team_id)
+    if (params.team_ids && params.team_ids.length > 0) query.set('team_ids', params.team_ids.join(','))
+    if (params.search) query.set('search', params.search)
+  }
+  const queryString = query.toString() ? `?${query.toString()}` : ''
+  const res = await fetch(`${API_BASE}/v1/matches${queryString}`)
   if (!res.ok) throw new Error('Failed to fetch matches')
+  return res.json()
+}
+
+export async function fetchTeams(sport?: Sport, leagueId?: string): Promise<Team[]> {
+  const query = new URLSearchParams()
+  if (sport) query.set('sport', sport)
+  if (leagueId) query.set('league_id', leagueId)
+  const queryString = query.toString() ? `?${query.toString()}` : ''
+  const res = await fetch(`${API_BASE}/v1/teams${queryString}`)
+  if (!res.ok) throw new Error('Failed to fetch teams')
+  return res.json()
+}
+
+export async function fetchTeamDetail(id: string): Promise<TeamDetailResponse> {
+  const res = await fetch(`${API_BASE}/v1/teams/${encodeURIComponent(id)}`)
+  if (!res.ok) throw new Error('Failed to fetch team details')
+  return res.json()
+}
+
+export async function fetchLeagueStandings(id: string): Promise<StandingsRow[]> {
+  const res = await fetch(`${API_BASE}/v1/leagues/${encodeURIComponent(id)}/standings`)
+  if (!res.ok) throw new Error('Failed to fetch standings')
+  return res.json()
+}
+
+export async function fetchMatchH2H(id: string): Promise<H2HEncounter[]> {
+  const res = await fetch(`${API_BASE}/v1/matches/${encodeURIComponent(id)}/h2h`)
+  if (!res.ok) throw new Error('Failed to fetch head-to-head')
+  return res.json()
+}
+
+export async function simulateMatch(): Promise<MatchEvent> {
+  const res = await fetch(`${API_BASE}/v1/matches/simulate`, {
+    method: 'POST'
+  })
+  if (!res.ok) throw new Error('Failed to trigger simulation')
   return res.json()
 }
 

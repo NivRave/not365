@@ -37,6 +37,7 @@ type MatchEvent struct {
 	Score      *Score      `json:"score,omitempty" bson:"score,omitempty"`
 	Clock      *Clock      `json:"clock,omitempty" bson:"clock,omitempty"`
 	Events     []Event     `json:"events,omitempty" bson:"events,omitempty"`
+	Stats      *MatchStats `json:"stats,omitempty" bson:"stats,omitempty"`
 	Sequence   int64       `json:"sequence" bson:"sequence"`
 	UpdatedAt  time.Time   `json:"updated_at" bson:"updated_at"`
 }
@@ -76,3 +77,58 @@ type HybridPayload struct {
 	Snapshot *MatchEvent `json:"snapshot,omitempty"`
 	Delta    []Event     `json:"delta,omitempty"`
 }
+
+type MatchFilter struct {
+	Sport     Sport
+	Status    string
+	StartDate *time.Time
+	EndDate   *time.Time
+	LeagueID  string
+	TeamID    string
+	TeamIDs   []string
+	Search    string
+	Limit     int
+}
+
+type MatchStats struct {
+	PossessionHome    int `json:"possession_home" bson:"possession_home"`
+	PossessionAway    int `json:"possession_away" bson:"possession_away"`
+	ShotsHome         int `json:"shots_home" bson:"shots_home"`
+	ShotsAway         int `json:"shots_away" bson:"shots_away"`
+	ShotsOnTargetHome int `json:"shots_on_target_home" bson:"shots_on_target_home"`
+	ShotsOnTargetAway int `json:"shots_on_target_away" bson:"shots_on_target_away"`
+	CornersHome       int `json:"corners_home" bson:"corners_home"`
+	CornersAway       int `json:"corners_away" bson:"corners_away"`
+	FoulsHome         int `json:"fouls_home" bson:"fouls_home"`
+	FoulsAway         int `json:"fouls_away" bson:"fouls_away"`
+	YellowCardsHome   int `json:"yellow_cards_home" bson:"yellow_cards_home"`
+	YellowCardsAway   int `json:"yellow_cards_away" bson:"yellow_cards_away"`
+	RedCardsHome      int `json:"red_cards_home" bson:"red_cards_home"`
+	RedCardsAway      int `json:"red_cards_away" bson:"red_cards_away"`
+}
+
+type StandingsRow struct {
+	Position       int      `json:"position"`
+	Team           Team     `json:"team"`
+	Played         int      `json:"played"`
+	Won            int      `json:"won"`
+	Drawn          int      `json:"drawn"`
+	Lost           int      `json:"lost"`
+	GoalsFor       int      `json:"goals_for"`
+	GoalsAgainst   int      `json:"goals_against"`
+	GoalDifference int      `json:"goal_difference"`
+	Points         int      `json:"points"`
+	Form           []string `json:"form"` // "W", "D", "L"
+}
+
+type H2HEncounter struct {
+	ID         string    `json:"id"`
+	Date       time.Time `json:"date"`
+	LeagueName string    `json:"league_name"`
+	HomeTeam   Team      `json:"home_team"`
+	AwayTeam   Team      `json:"away_team"`
+	HomeScore  int       `json:"home_score"`
+	AwayScore  int       `json:"away_score"`
+	Winner     string    `json:"winner"` // "home", "away", "draw"
+}
+

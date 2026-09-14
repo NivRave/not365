@@ -41,8 +41,68 @@ export interface MatchEvent {
   score?: Score
   clock?: Clock
   events?: Event[]
+  stats?: MatchStats
   sequence: number
   updated_at: string
+}
+
+export interface MatchStats {
+  possession_home: number
+  possession_away: number
+  shots_home: number
+  shots_away: number
+  shots_on_target_home: number
+  shots_on_target_away: number
+  corners_home: number
+  corners_away: number
+  fouls_home: number
+  fouls_away: number
+  yellow_cards_home?: number
+  yellow_cards_away?: number
+  red_cards_home?: number
+  red_cards_away?: number
+}
+
+export interface StandingsRow {
+  position: number
+  team: Team
+  played: number
+  won: number
+  drawn: number
+  lost: number
+  goals_for: number
+  goals_against: number
+  goal_difference: number
+  points: number
+  form: ('W' | 'D' | 'L')[]
+}
+
+export interface H2HEncounter {
+  id: string
+  date: string
+  league_name: string
+  home_team: Team
+  away_team: Team
+  home_score: number
+  away_score: number
+  winner: 'home' | 'away' | 'draw'
+}
+
+export interface TeamDetailResponse {
+  team: Team
+  form: ('W' | 'D' | 'L')[]
+  recent_matches: MatchEvent[]
+  upcoming_matches: MatchEvent[]
+}
+
+export interface MatchFilterParams {
+  sport?: Sport
+  status?: string
+  date?: string
+  league_id?: string
+  team_id?: string
+  team_ids?: string[]
+  search?: string
 }
 
 export interface User {

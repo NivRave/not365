@@ -45,7 +45,12 @@ type jsonrpcResponse struct {
 func NewMCPClient(ctx context.Context, configPath string, tryStdio bool) (*MCPClient, error) {
 	client := &MCPClient{
 		pending:    make(map[int64]chan []byte),
-		httpClient: &http.Client{Timeout: 10 * time.Second},
+		httpClient: &http.Client{
+			Timeout: 10 * time.Second,
+			Transport: &http.Transport{
+				ForceAttemptHTTP2: false,
+			},
+		},
 	}
 
 	if tryStdio {
@@ -171,7 +176,8 @@ func (c *MCPClient) httpFallback(ctx context.Context, toolName string, args map[
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "not365-client/1.0")
+	req.Header.Set("User-Agent", "curl/8.13.0")
+	req.Header.Set("Accept", "*/*")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

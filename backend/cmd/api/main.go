@@ -101,6 +101,11 @@ func main() {
 		r.Get("/matches", matchHandler.ListMatches)
 		r.Get("/matches/{id}", matchHandler.GetMatch)
 		r.Get("/matches/{id}/sync", matchHandler.SyncMatch)
+		r.Get("/teams", matchHandler.ListTeams)
+		r.Get("/teams/{id}", matchHandler.GetTeamDetail)
+		r.Get("/leagues/{id}/standings", matchHandler.GetLeagueStandings)
+		r.Get("/matches/{id}/h2h", matchHandler.GetMatchH2H)
+		r.Post("/matches/simulate", matchHandler.SimulateMatch)
 		r.Get("/calendar/{token}", calendarHandler.HandleCalendarExport)
 
 		// Protected preferences routes
